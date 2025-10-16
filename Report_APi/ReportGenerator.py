@@ -1,3 +1,4 @@
+
 from flask import Flask, send_file, make_response, jsonify
 from reportlab.lib.pagesizes import LETTER, A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -13,8 +14,6 @@ from bson.binary import Binary
 import io
 
 
-
-
 def Generar_Equipos(datos):
     try:
         data = datos
@@ -27,8 +26,6 @@ def Generar_Equipos(datos):
         elements = []
         styles = getSampleStyleSheet()
         encabezado_pdf(elements, styles, 'Reporte Equipos Registrados')
-        # Título
-        #elements.append(Paragraph('Reporte de Equipos Registrados', styles['Title']))
         elements.append(Spacer(1, 12))
 
         # Encabezado de la tabla
@@ -39,8 +36,6 @@ def Generar_Equipos(datos):
             nombre = equipo.get('Nombre', 'N/D')
             localidad = equipo.get('Localidad', 'N/D')
             logo_url = equipo.get('url')
-
-            # Intentar descargar el logo (opcional)
             try:
                 if logo_url:
                     response = requests.get(logo_url, timeout=3)
@@ -71,23 +66,22 @@ def Generar_Equipos(datos):
         doc.build(elements)
 
 
-        #db = bnb.get_mongo_connection()
+        # Guardad Datos en MongoDB
+        db = bnb.get_mongo_connection() 
 
-
-        '''
         buffer.seek(0)
-        pdf_bytes = buffer.read()
+        pdf_bytes = buffer.read() 
 
         documento = {
             'nombre_reporte': 'Reporte de Equipos Registrados',
             'tipo': 'equipos',
             'fecha_creacion': datetime.utcnow(),
-            'archivo_pdf': Binary(pdf_bytes)
+            'archivo_pdf': Binary(pdf_bytes) 
         }
 
         db.Reporteria.insert_one(documento)
 
-        '''
+
         buffer.seek(0)
         return send_file(
             buffer,
@@ -98,6 +92,8 @@ def Generar_Equipos(datos):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
 
 def Generar_Jugadores(datos, Equipo):
     try:
@@ -113,11 +109,9 @@ def Generar_Jugadores(datos, Equipo):
         elements = []
         styles = getSampleStyleSheet()
 
-        # 🔸 Encabezado corporativo
+        # Encabezado corporativo
         encabezado_pdf(elements, styles, f'Roster de Jugadores, equipo: {equipo}')
 
-        # Título del reporte
-        #elements.append(Paragraph(f'Reporte de Jugadores - Equipo {id_equipo}', styles['Title']))
         elements.append(Spacer(1, 12))
 
         # Encabezado de la tabla
@@ -149,22 +143,23 @@ def Generar_Jugadores(datos, Equipo):
         elements.append(table)
         doc.build(elements)
 
-        '''
-        db = bnb.get_mongo_connection()
+        
 
+        db = bnb.get_mongo_connection() 
 
         buffer.seek(0)
         pdf_bytes = buffer.read()
 
         documento = {
-            'nombre_reporte': 'Reporte de Equipos Registrados',
-            'tipo': 'equipos',
+            'nombre_reporte': f'Reporte de Jugadores - Equipo {equipo}', 
+            'tipo': 'jugadores',
             'fecha_creacion': datetime.utcnow(),
             'archivo_pdf': Binary(pdf_bytes)
         }
         
         db.Reporteria.insert_one(documento)
-        '''
+
+
         buffer.seek(0)
         return send_file(
             buffer,
@@ -175,6 +170,7 @@ def Generar_Jugadores(datos, Equipo):
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
 
 def Generar_Historial_Partidos(datos):
     try:
@@ -189,11 +185,9 @@ def Generar_Historial_Partidos(datos):
         elements = []
         styles = getSampleStyleSheet()
 
-        # 🔸 Encabezado corporativo
+        #  Encabezado corporativo
         encabezado_pdf(elements, styles, 'Historial de todos los Partidos Jugados')
 
-        # Título del reporte
-        #elements.append(Paragraph('Historial de Partidos', styles['Title']))
         elements.append(Spacer(1, 12))
 
         # Encabezado de la tabla
@@ -230,22 +224,23 @@ def Generar_Historial_Partidos(datos):
         elements.append(table)
         doc.build(elements)
 
-        '''
+        
+   
         db = bnb.get_mongo_connection()
-
 
         buffer.seek(0)
         pdf_bytes = buffer.read()
 
         documento = {
-            'nombre_reporte': 'Reporte de Equipos Registrados',
-            'tipo': 'equipos',
+            'nombre_reporte': 'Historial de Partidos', 
+            'tipo': 'partidos', 
             'fecha_creacion': datetime.utcnow(),
             'archivo_pdf': Binary(pdf_bytes)
         }
 
         db.Reporteria.insert_one(documento)
-        '''
+
+
         buffer.seek(0)
         return send_file(
             buffer,
@@ -257,11 +252,13 @@ def Generar_Historial_Partidos(datos):
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
+
+
 def Generar_Roster_Partido(datos):
     
     try:
         partido_info, jugadores_locales, jugadores_visitantes = datos['partido_info'], datos['jugadores_locales'], datos['jugadores_visitantes']
-      
+     
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4)
@@ -275,8 +272,6 @@ def Generar_Roster_Partido(datos):
             f"Roster de los equipos en el partido jugado en: {partido_info['FechaHora']}, en la localidad {partido_info['Nombre']}"
         )
 
-        # Título
-        #elements.append(Paragraph('Roster de Jugadores por Partido', styles['Title']))
         elements.append(Spacer(1, 12))
 
         # Información del partido
@@ -323,22 +318,20 @@ def Generar_Roster_Partido(datos):
 
         # Generar PDF
         doc.build(elements)
-        '''
+        
+ 
         db = bnb.get_mongo_connection()
-
-
         buffer.seek(0)
         pdf_bytes = buffer.read()
 
         documento = {
-            'nombre_reporte': 'Reporte de Equipos Registrados',
-            'tipo': 'equipos',
+            'nombre_reporte': f"Roster Partido {datos['equipo_local']} vs {datos['equipo_visitante']}", 
+            'tipo': 'roster_partido', 
             'fecha_creacion': datetime.utcnow(),
             'archivo_pdf': Binary(pdf_bytes)
         }
-
         db.Reporteria.insert_one(documento)
-        '''
+
 
         buffer.seek(0)
         return send_file(
@@ -351,14 +344,13 @@ def Generar_Roster_Partido(datos):
     except Exception as e:
         from flask import jsonify
         return jsonify({'error': str(e)}), 500
-
+    
 
 def Generar_Roster_Partido_delado(token, id_partido):
     try:
         partido_info, jugadores_locales, jugadores_visitantes = dt.Obtener_Jugadores_Partido(token, id_partido)
 
-      
-
+    
 
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=A4)
@@ -372,8 +364,6 @@ def Generar_Roster_Partido_delado(token, id_partido):
             f"Roster de los equipos en el partido jugado en: {partido_info['fechaHora']}, en la localidad {partido_info['localidad']}"
         )
 
-        # Título
-        #elements.append(Paragraph('Roster de Jugadores por Partido', styles['Title']))
         elements.append(Spacer(1, 12))
 
         # Información del partido
@@ -436,22 +426,22 @@ def Generar_Roster_Partido_delado(token, id_partido):
 
         # Generar PDF
         doc.build(elements)
-        '''
+        
+ 
         db = bnb.get_mongo_connection()
-
 
         buffer.seek(0)
         pdf_bytes = buffer.read()
 
         documento = {
-            'nombre_reporte': 'Reporte de Equipos Registrados',
-            'tipo': 'equipos',
+            'nombre_reporte': f"Roster Partido (delado) {partido_info.get('local', 'N/D')} vs {partido_info.get('visitante', 'N/D')}", # Nombre corregido
+            'tipo': 'roster_partido_delado', 
             'fecha_creacion': datetime.utcnow(),
             'archivo_pdf': Binary(pdf_bytes)
         }
 
         db.Reporteria.insert_one(documento)
-        '''
+
 
         buffer.seek(0)
         return send_file(
@@ -466,9 +456,9 @@ def Generar_Roster_Partido_delado(token, id_partido):
         return jsonify({'error': str(e)}), 500
 
 
+
 def Generar_Reporte_Estadisticas_Jugador(datos):
     try:
-        # Obtener los datos desde tu método existente
         jugador, total_faltas, total_anotaciones = datos['jugador'], datos['total_faltas'], datos['total_anotaciones']
 
         buffer = io.BytesIO()
@@ -563,15 +553,28 @@ def Generar_Reporte_Estadisticas_Jugador(datos):
         doc.build(elements)
         
 
-       
+        db = bnb.get_mongo_connection()
+
+        buffer.seek(0)
+        pdf_bytes = buffer.read()
+
+        documento = {
+            'nombre_reporte': f"Estadísticas Jugador {jugador.get('Nombre', '')} {jugador.get('Apellido', '')}", 
+            'tipo': 'estadisticas_jugador',
+            'fecha_creacion': datetime.utcnow(),
+            'archivo_pdf': Binary(pdf_bytes)
+        }
+
+        db.Reporteria.insert_one(documento)
+   
+
         buffer.seek(0)
         return send_file(
             buffer,
             as_attachment=True,
-            download_name=f"estadisticas_jugador_{jugador.get('nombre', '')}_{jugador.get('apellido', '')}.pdf",
+            download_name=f"estadisticas_jugador_{jugador.get('Nombre', '')}_{jugador.get('Apellido', '')}.pdf",
             mimetype='application/pdf'
         )
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
